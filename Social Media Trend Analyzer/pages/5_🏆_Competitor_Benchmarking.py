@@ -9,6 +9,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 from utils.ui import set_premium_ui
+from utils.trend_fetcher import get_niche_score, level_color, level_emoji, compare_keywords
 
 st.set_page_config(page_title="Competitor Benchmarking", page_icon="🏆", layout="wide")
 
@@ -48,30 +49,58 @@ with c2:
 submitted = st.button("📊 Run AI Simulation", use_container_width=True)
 
 if submitted:
-    with st.spinner("AI is analyzing niche averages and simulating competitor metrics..."):
-        # AI Simulation Logic
-        # As follower count increases, engagement rate typically drops (law of large numbers)
+    with st.spinner("AI is fetching live niche trend data and simulating competitor metrics..."):
+        # Get live Google Trends scores for both niches
+        my_niche_score   = get_niche_score(my_niche)    # 0–100 live score
+        comp_niche_score = get_niche_score(comp_niche)  # 0–100 live score
+
+        # Niche multiplier is now DATA-DRIVEN from Google Trends
+        # Score 75+ → 1.25x boost, 50-75 → 1.1x, 25-50 → 0.95x, <25 → 0.85x
+        def score_to_mult(s):
+            if s >= 75: return 1.25
+            elif s >= 50: return 1.1
+            elif s >= 25: return 0.95
+            else: return 0.85
+
+        my_niche_mult   = score_to_mult(my_niche_score)
+        comp_niche_mult = score_to_mult(comp_niche_score)
+
+        # Size-based adjustment (larger accounts have lower % engagement)
         size_multiplier = (my_followers / max(comp_followers, 1)) ** 0.1
-        
-        # Base competitor engagement is a function of yours + size difference + some randomness
-        base_comp_eng = my_eng_rate * size_multiplier * np.random.uniform(0.8, 1.2)
-        # Niche multiplier (e.g., fitness might have slightly higher engagement than finance)
-        niche_mult = 1.1 if comp_niche in ["Fitness", "Beauty", "Gaming"] else 0.9
-        comp_eng_rate = round(base_comp_eng * niche_mult, 2)
-        
-        # Simulate secondary metrics based on engagement rate
-        # Reach % is usually higher than engagement
-        my_reach = round(my_eng_rate * np.random.uniform(2.5, 4.0), 1)
+        base_comp_eng   = my_eng_rate * size_multiplier * np.random.uniform(0.8, 1.2)
+        comp_eng_rate   = round(base_comp_eng * comp_niche_mult, 2)
+
+        # Adjust your engagement based on live niche score too
+        adj_my_eng_rate = round(my_eng_rate * my_niche_mult, 2)
+
+        my_reach   = round(adj_my_eng_rate * np.random.uniform(2.5, 4.0), 1)
         comp_reach = round(comp_eng_rate * np.random.uniform(2.5, 4.0), 1)
-        
-        # Save & Share rates are fractions of engagement
-        my_save = round(my_eng_rate * np.random.uniform(0.1, 0.3), 2)
-        comp_save = round(comp_eng_rate * np.random.uniform(0.1, 0.3), 2)
-        
-        my_share = round(my_eng_rate * np.random.uniform(0.05, 0.2), 2)
+        my_save    = round(adj_my_eng_rate * np.random.uniform(0.1, 0.3), 2)
+        comp_save  = round(comp_eng_rate * np.random.uniform(0.1, 0.3), 2)
+        my_share   = round(adj_my_eng_rate * np.random.uniform(0.05, 0.2), 2)
         comp_share = round(comp_eng_rate * np.random.uniform(0.05, 0.2), 2)
 
     st.markdown("---")
+
+    # ── Live Niche Trend Context ─────────────────────────────────────────────
+    bn1, bn2 = st.columns(2)
+    with bn1:
+        c = level_color("High" if my_niche_score >= 50 else "Medium" if my_niche_score >= 25 else "Low")
+        st.markdown(f"""
+        <div style="background:{c}12;border:1px solid {c}44;border-left:4px solid {c};
+                    border-radius:8px;padding:10px 16px;margin-bottom:12px;">
+            <b style="color:{c};">Your Niche ({my_niche})</b> —
+            Google Trends Score: <b>{my_niche_score}/100</b> · Multiplier: <b>{my_niche_mult:.2f}x</b>
+        </div>""", unsafe_allow_html=True)
+    with bn2:
+        c2 = level_color("High" if comp_niche_score >= 50 else "Medium" if comp_niche_score >= 25 else "Low")
+        st.markdown(f"""
+        <div style="background:{c2}12;border:1px solid {c2}44;border-left:4px solid {c2};
+                    border-radius:8px;padding:10px 16px;margin-bottom:12px;">
+            <b style="color:{c2};">Competitor Niche ({comp_niche})</b> —
+            Google Trends Score: <b>{comp_niche_score}/100</b> · Multiplier: <b>{comp_niche_mult:.2f}x</b>
+        </div>""", unsafe_allow_html=True)
+
     st.markdown(f"### 🎯 Head-to-Head: You vs {comp_handle}")
     
     # ─── KPI Cards ───────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 from utils.ui import set_premium_ui
+from utils.trend_fetcher import get_live_trend_score, level_color, level_emoji
 
 st.set_page_config(page_title="Sentiment Analyzer", page_icon="🎭", layout="wide")
 
@@ -37,13 +38,21 @@ st.markdown("### 🔍 Search Topic")
 topic = st.text_input("Enter a Hashtag, Brand, or Trend", value="Artificial Intelligence")
 submitted = st.button("📊 Analyze Audience Reaction", use_container_width=True)
 
-def generate_comments(topic, num_comments=30):
+def generate_comments(topic, num_comments=30, trend_score=50):
     # Use a seed based on the topic so the same topic gives consistent results during a session
     seed_val = int(hashlib.md5(topic.lower().encode('utf-8')).hexdigest(), 16) % (10**8)
     random.seed(seed_val)
-    
-    # Determine general vibe of the topic based on seed
-    vibe = random.choice(["mostly_positive", "mixed", "mostly_negative", "neutral_heavy"])
+
+    # Determine sentiment vibe based on REAL trend score instead of random
+    # High trending topics tend to have more positive sentiment
+    if trend_score >= 75:
+        vibe = "mostly_positive"
+    elif trend_score >= 50:
+        vibe = "mixed"
+    elif trend_score >= 25:
+        vibe = "neutral_heavy"
+    else:
+        vibe = random.choice(["mostly_negative", "neutral_heavy"])
     
     if vibe == "mostly_positive":
         weights = [0.65, 0.25, 0.10]
@@ -95,8 +104,17 @@ def generate_comments(topic, num_comments=30):
     return pd.DataFrame(comments)
 
 if submitted and topic:
-    with st.spinner("Fetching comments and running AI Sentiment Analysis..."):
-        df_comments = generate_comments(topic, num_comments=50)
+    # Fetch live trend score first — used to calibrate sentiment weights
+    with st.spinner(f"📡 Fetching live trend data for **{topic}**…"):
+        live_trend = get_live_trend_score(topic)
+    trend_score   = live_trend["score"]
+    trend_level   = live_trend["level"]
+    trend_src     = live_trend["source"]
+    t_color       = level_color(trend_level)
+    t_emoji       = level_emoji(trend_level)
+
+    with st.spinner("Running AI Sentiment Analysis on audience reactions..."):
+        df_comments = generate_comments(topic, num_comments=50, trend_score=trend_score)
         
         counts = df_comments['Sentiment'].value_counts()
         pos_count = counts.get('Positive', 0)
@@ -109,6 +127,22 @@ if submitted and topic:
         health_score = int(((pos_count * 100) + (neu_count * 50) + (neg_count * 0)) / total)
         
     st.markdown("---")
+
+    # ── Live Trend Context Banner ──────────────────────────────────────────────
+    src_badge = "📡 Live Google Trends" if trend_src == "google_trends" else "🧠 Cached Intelligence"
+    st.markdown(f"""
+    <div style="background:{t_color}12; border:1px solid {t_color}44; border-left:4px solid {t_color};
+                border-radius:8px; padding:12px 20px; margin-bottom:16px; display:flex; align-items:center; gap:16px;">
+        <div>
+            <span style="font-size:1.8rem;">{t_emoji}</span>
+        </div>
+        <div>
+            <div style="font-weight:700; color:{t_color}; font-size:1rem;">{topic} — Google Trends Score: {trend_score}/100 ({trend_level})</div>
+            <div style="font-size:0.8rem; opacity:0.7;">Source: {src_badge} · High-trending topics tend to generate more positive sentiment.</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown(f"### 📈 Analysis Results for '{topic}'")
     
     c1, c2 = st.columns([1, 1])
