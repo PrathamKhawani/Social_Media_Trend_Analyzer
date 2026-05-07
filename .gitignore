@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Streamlit
+.streamlit/
+
+# VS Code
+.vscode/
+
+# Data (Optional - common to exclude large CSVs if they change often, but maybe keep for sample)
+# engagement.csv
+# hashtags.csv
+# time_series.csv
+
+# OS files
+.DS_Store
+Thumbs.db
