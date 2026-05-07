@@ -113,7 +113,7 @@ cd Social_Media_Trend_Analyzer
 pip install -r requirements.txt
 
 # 3. Launch the app
-streamlit run "Social Media Trend Analyzer/Dashboard.py"
+streamlit run Dashboard.py
 ```
 
 ---
@@ -122,36 +122,31 @@ streamlit run "Social Media Trend Analyzer/Dashboard.py"
 
 ```
 Social_Media_Trend_Analyzer/
-├── requirements.txt                        # All Python dependencies
+├── Dashboard.py                        # 🏠 Main entry point
+├── engagement.csv                      # Instagram engagement dataset
+├── hashtags.csv                        # Hashtag performance dataset
+├── time_series.csv                     # YouTube trending dataset
+├── requirements.txt                    # All Python dependencies
 ├── README.md
-│
-└── Social Media Trend Analyzer/
-    ├── Dashboard.py                        # 🏠 Main entry point
-    │
-    ├── pages/
-    │   ├── 1_🔮_Trend_Predictor.py        # Live Google Trends + ML blend
-    │   ├── 2_📊_Post_Analyzer.py          # Post simulation + trend multiplier
-    │   ├── 3_🔍_Hashtag_Explorer.py       # Live hashtag check + comparison
-    │   ├── 4_📋_Data_Explorer.py          # Market pulse + raw data
-    │   ├── 5_🏆_Competitor_Benchmarking.py# Live niche scores
-    │   ├── 6_🎭_Sentiment_Analyzer.py     # Trend-calibrated sentiment
-    │   └── 7_📄_Report_Generator.py       # PDF with live score
-    │
-    ├── utils/
-    │   ├── trend_fetcher.py               # 📡 Live Google Trends engine
-    │   ├── model_trainer.py               # ML model training pipeline
-    │   ├── data_updater.py                # Synthetic data generator
-    │   └── ui.py                          # Global CSS / design system
-    │
-    ├── models/                            # Pre-trained .pkl model files
-    │   ├── trend_predictor.pkl
-    │   ├── performance_classifier.pkl
-    │   ├── engagement_regressor.pkl
-    │   └── hashtag_clustering.pkl
-    │
-    ├── engagement.csv                     # Instagram engagement dataset
-    ├── hashtags.csv                       # Hashtag performance dataset
-    └── time_series.csv                    # YouTube trending dataset
+├── .gitignore
+├── pages/
+│   ├── 1_🔮_Trend_Predictor.py
+│   ├── 2_📊_Post_Analyzer.py
+│   ├── 3_🔍_Hashtag_Explorer.py
+│   ├── 4_📋_Data_Explorer.py
+│   ├── 5_🏆_Competitor_Benchmarking.py
+│   ├── 6_🎭_Sentiment_Analyzer.py
+│   └── 7_📄_Report_Generator.py
+├── utils/
+│   ├── trend_fetcher.py
+│   ├── model_trainer.py
+│   ├── data_updater.py
+│   └── ui.py
+└── models/                             # Pre-trained .pkl model files
+    ├── trend_predictor.pkl
+    ├── performance_classifier.pkl
+    ├── engagement_regressor.pkl
+    └── hashtag_clustering.pkl
 ```
 
 ---
