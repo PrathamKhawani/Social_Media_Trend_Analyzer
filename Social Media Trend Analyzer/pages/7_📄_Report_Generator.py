@@ -11,6 +11,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 from utils.ui import set_premium_ui
+from utils.trend_fetcher import get_live_trend_score, level_emoji
 
 st.set_page_config(page_title="Report Generator", page_icon="📄", layout="wide")
 
@@ -59,9 +60,35 @@ include_data = st.checkbox("Include dataset statistics in the report", value=Tru
 
 submitted = st.button("📥 Generate PDF Report", use_container_width=True)
 
+# ── Live Trend Score for the Topic ─────────────────────────────────────────────
+if topic:
+    with st.spinner(f"📡 Fetching live trend score for **{topic}**…"):
+        live_data   = get_live_trend_score(topic)
+    live_score  = live_data["score"]
+    live_level  = live_data["level"]
+    live_src    = live_data["source"]
+    live_emoji  = level_emoji(live_level)
+    live_color  = {"Viral": "#ff6b35", "High": "#00e676", "Medium": "#fca311", "Low": "#e63946"}.get(live_level, "#fca311")
+    src_label   = "📡 Live Google Trends" if live_src == "google_trends" else "🧠 Cached Intelligence"
+
+    st.markdown(f"""
+    <div style="background:{live_color}12; border:1px solid {live_color}44; border-left:4px solid {live_color};
+                border-radius:8px; padding:12px 20px; margin:12px 0; display:flex; align-items:center; gap:16px;">
+        <div><span style="font-size:2rem;">{live_emoji}</span></div>
+        <div>
+            <div style="font-weight:700; color:{live_color}; font-size:1rem;">
+                {topic} — Live Google Trends Score: {live_score}/100 ({live_level})
+            </div>
+            <div style="font-size:0.8rem; opacity:0.7;">Source: {src_label} · This live score will be included in your PDF report.</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    live_score, live_level, live_emoji = 50, "Medium", "📊"
+
 
 # ─── PDF Generation ──────────────────────────────────────────────────────────
-def generate_pdf(analyst, topic, platform, region, pred_eng, confidence, reach, sentiment, summary, include_data):
+def generate_pdf(analyst, topic, platform, region, pred_eng, confidence, reach, sentiment, summary, include_data, live_score=50, live_level="Medium"):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -123,10 +150,11 @@ def generate_pdf(analyst, topic, platform, region, pred_eng, confidence, reach, 
 
     kpi_row("Predicted Engagement Level", pred_eng.upper(), fill=False)
     kpi_row("AI Certainty Score", f"{confidence}%", fill=True)
-    kpi_row("Estimated Audience Reach", f"{reach:,} people", fill=False)
-    kpi_row("Audience Sentiment", sentiment, fill=True)
-    kpi_row("Best Platform for Content", platform, fill=False)
-    kpi_row("Best Time to Post", "6PM – 9PM (local time)", fill=True)
+    kpi_row("Live Google Trends Score", f"{live_score}/100 ({live_level})", fill=False)
+    kpi_row("Estimated Audience Reach", f"{reach:,} people", fill=True)
+    kpi_row("Audience Sentiment", sentiment, fill=False)
+    kpi_row("Best Platform for Content", platform, fill=True)
+    kpi_row("Best Time to Post", "6PM - 9PM (local time)", fill=False)
     pdf.ln(5)
 
     # ── Recommendations ──
@@ -194,7 +222,8 @@ if submitted:
         pdf_bytes = generate_pdf(
             analyst_name, topic, platform, region,
             predicted_engagement, ai_confidence,
-            estimated_reach, sentiment, exec_summary, include_data
+            estimated_reach, sentiment, exec_summary, include_data,
+            live_score=live_score, live_level=live_level
         )
 
     st.success("✅ Report generated successfully! Click below to download.")

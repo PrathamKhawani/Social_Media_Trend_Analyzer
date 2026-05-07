@@ -12,6 +12,7 @@ sys.path.append(BASE_DIR)
 from utils.data_updater import update_datasets
 from utils.ui import set_premium_ui
 from utils.model_trainer import main as retrain_models
+from utils.trend_fetcher import get_niche_score, get_trending_now, level_color, level_emoji
 
 # ─── PAGE CONFIG ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -97,8 +98,49 @@ with st.expander("📖 Welcome! How to use this application?", expanded=True):
 
 st.markdown("---")
 
+# ─── LIVE MARKET PULSE ────────────────────────────────────────────────────────────
+st.markdown('<p class="section-header">📡 Live Market Pulse — Real-Time Niche Scores</p>', unsafe_allow_html=True)
+st.caption("📡 Powered by Google Trends · Auto-refreshes every hour")
+
+niche_list = ["Technology", "Fitness", "Fashion", "Finance", "Gaming", "Food", "Travel", "Education"]
+with st.spinner("Fetching live trend data…"):
+    pulse_cols = st.columns(len(niche_list))
+    for pcol, niche in zip(pulse_cols, niche_list):
+        sc = get_niche_score(niche)
+        lv = "Viral" if sc >= 75 else "High" if sc >= 50 else "Medium" if sc >= 25 else "Low"
+        c  = level_color(lv)
+        e  = level_emoji(lv)
+        pcol.markdown(f"""
+        <div style="background:var(--secondary-background-color);border:1px solid {c}44;
+                    border-top:3px solid {c};border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:0.75rem;font-weight:600;opacity:0.7;">{niche}</div>
+            <div style="font-size:1.5rem;font-weight:700;color:{c};margin:4px 0;">{e} {sc}</div>
+            <div style="font-size:0.7rem;color:{c};">{lv}</div>
+        </div>""", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ─── LIVE TRENDING NOW FEED ───────────────────────────────────────────────────────
+st.markdown('<p class="section-header">🔥 Trending Now — Live from Google Trends</p>', unsafe_allow_html=True)
+with st.spinner("Loading live trending topics…"):
+    live_now = get_trending_now()
+if live_now:
+    t_cols = st.columns(5)
+    for i, t in enumerate(live_now[:10]):
+        with t_cols[i % 5]:
+            st.markdown(f"""
+            <div style="background:var(--secondary-background-color);border:1px solid rgba(255,107,53,0.3);
+                        border-radius:8px;padding:12px;text-align:center;margin-bottom:8px;">
+                <div style="font-size:0.85rem;font-weight:600;">{t['title']}</div>
+                <div style="color:#ff6b35;font-size:0.8rem;margin-top:4px;">{t['traffic']}</div>
+            </div>""", unsafe_allow_html=True)
+
+st.markdown("---")
+
 # ─── KPI METRICS ─────────────────────────────────────────────────────────────────
+st.markdown('<p class="section-header">📊 Dataset Insights</p>', unsafe_allow_html=True)
 k1, k2, k3, k4 = st.columns(4)
+
 
 def kpi(col, icon, title, value, sub=""):
     col.markdown(f"""

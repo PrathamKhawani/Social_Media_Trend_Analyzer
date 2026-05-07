@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
-
 import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 from utils.ui import set_premium_ui
+from utils.trend_fetcher import get_niche_score, level_color, level_emoji
 
 st.set_page_config(page_title="Data Explorer", page_icon="📋", layout="wide")
 
@@ -22,9 +22,33 @@ with st.expander("📖 How to use the Data Explorer", expanded=False):
     st.markdown("""
     1. **Navigate the tabs** to switch between Instagram Engagement, Hashtag, and YouTube data.
     2. **Use the filters** to narrow down the data to specific categories, media types, or regions.
-    3. Explore the **Summary Statistics** charts to spot trends.
-    4. Click **Download CSV** to export the filtered data for your own analysis.
+    3. Check the **Live Market Pulse** at the top to see which content niches are trending right now.
+    4. Explore the **Summary Statistics** charts to spot trends.
+    5. Click **Download CSV** to export the filtered data for your own analysis.
     """)
+
+# ── Live Market Pulse ─────────────────────────────────────────────────────────
+st.markdown("### 📊 Live Market Pulse — Category Trend Scores")
+st.caption("📡 Real-time Google Trends scores for all content categories · Updates every hour")
+
+niche_categories = ["Technology", "Fitness", "Fashion", "Finance", "Gaming", "Food", "Travel", "Education"]
+
+with st.spinner("Loading live market data…"):
+    pulse_cols = st.columns(len(niche_categories))
+    for col, niche in zip(pulse_cols, niche_categories):
+        score = get_niche_score(niche)
+        lv    = "Viral" if score >= 75 else "High" if score >= 50 else "Medium" if score >= 25 else "Low"
+        c     = level_color(lv)
+        e     = level_emoji(lv)
+        col.markdown(f"""
+        <div style="background:var(--secondary-background-color);border:1px solid {c}44;
+                    border-top:3px solid {c};border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:0.78rem;font-weight:600;opacity:0.8;">{niche}</div>
+            <div style="font-size:1.4rem;font-weight:700;color:{c};margin:4px 0;">{e} {score}</div>
+            <div style="font-size:0.7rem;color:{c};">{lv}</div>
+        </div>""", unsafe_allow_html=True)
+
+st.markdown("---")
 
 @st.cache_data
 def load_all():
