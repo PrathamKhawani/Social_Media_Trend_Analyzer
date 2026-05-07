@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import joblib
 import numpy as np
 import os
+import streamlit.components.v1 as components
 
 import sys
 
@@ -29,6 +30,7 @@ with st.expander("📖 How to use the Post Analyzer", expanded=False):
     2. Click **🚀 Analyze Post** to run the simulation.
     3. Review the **Performance Bucket**, **Expected Engagement Rate**, and **Estimated Reach**.
     4. Check the **Best Hours to Post** chart to optimize your posting time!
+    5. Use the **AI Hook Generator** below to copy ready-to-use viral captions!
     """)
 
 @st.cache_resource
@@ -53,19 +55,63 @@ import random
 
 def generate_captions(category, media, cta):
     hooks = {
-        "Technology": ["Is this the end of smartphones? 📱", "I tested the top 3 gadgets so you don't have to.", "The hidden feature Apple didn't tell you about 🤫"],
-        "Fitness": ["Stop doing your squats like this! 🛑", "3 exercises for a bulletproof core.", "My entire morning routine revealed. ☕"],
-        "Beauty": ["The $5 drugstore find that beats luxury brands.", "My secret to glowing skin in 5 minutes.", "GRWM: The ultimate night out look ✨"],
-        "Finance": ["How I saved $10k in 6 months without trying.", "The biggest money mistake you're making right now.", "Index funds vs Real Estate: The truth 📈"],
-        "Food": ["The only pasta recipe you'll ever need 🍝", "I tried the viral TikTok recipe so you don't have to.", "3-ingredient dessert that takes 5 minutes!"],
-        "Travel": ["The most underrated city in Europe ✈️", "How to pack for 2 weeks in one carry-on.", "My honest review of the Maldives 🏝️"],
-        "Gaming": ["The best loadout for Season 5 🎮", "How I beat the hardest boss in under 2 minutes.", "This hidden easter egg changes everything!"],
-        "Education": ["The study hack that got me a 4.0 GPA 📚", "Stop studying harder, start studying smarter.", "5 websites every student needs to know."],
-        "Fashion": ["3 ways to style a basic white tee 👕", "Trend alert: What's in for Fall 2026.", "My honest review of the viral Zara jacket."],
-        "Entertainment": ["You won't believe what happened at the end 😱", "My top 5 favorite movies of all time 🍿", "The truth behind the latest drama..."]
+        "Technology": [
+            "Is this the end of smartphones? 📱",
+            "I tested the top 3 gadgets so you don't have to.",
+            "The hidden feature Apple didn't tell you about 🤫"
+        ],
+        "Fitness": [
+            "Stop doing your squats like this! 🛑",
+            "3 exercises for a bulletproof core.",
+            "My entire morning routine revealed. ☕"
+        ],
+        "Beauty": [
+            "The $5 drugstore find that beats luxury brands.",
+            "My secret to glowing skin in 5 minutes.",
+            "GRWM: The ultimate night out look ✨"
+        ],
+        "Finance": [
+            "How I saved $10k in 6 months without trying.",
+            "The biggest money mistake you're making right now.",
+            "Index funds vs Real Estate: The truth 📈"
+        ],
+        "Food": [
+            "The only pasta recipe you'll ever need 🍝",
+            "I tried the viral TikTok recipe so you don't have to.",
+            "3-ingredient dessert that takes 5 minutes!"
+        ],
+        "Travel": [
+            "The most underrated city in Europe ✈️",
+            "How to pack for 2 weeks in one carry-on.",
+            "My honest review of the Maldives 🏝️"
+        ],
+        "Gaming": [
+            "The best loadout for Season 5 🎮",
+            "How I beat the hardest boss in under 2 minutes.",
+            "This hidden easter egg changes everything!"
+        ],
+        "Education": [
+            "The study hack that got me a 4.0 GPA 📚",
+            "Stop studying harder, start studying smarter.",
+            "5 websites every student needs to know."
+        ],
+        "Fashion": [
+            "3 ways to style a basic white tee 👕",
+            "Trend alert: What's in for Fall 2026.",
+            "My honest review of the viral Zara jacket."
+        ],
+        "Entertainment": [
+            "You won't believe what happened at the end 😱",
+            "My top 5 favorite movies of all time 🍿",
+            "The truth behind the latest drama..."
+        ]
     }
-    default_hooks = ["Wait until the end for this... 👀", "I can't believe I'm sharing my secret 🤫", "This changes everything!"]
-    
+    default_hooks = [
+        "Wait until the end for this... 👀",
+        "I can't believe I'm sharing my secret 🤫",
+        "This changes everything!"
+    ]
+
     bodies = [
         "I've been experimenting with this for the past few weeks and the results are mind-blowing. If you want to achieve similar results, you need to be consistent and pay attention to the details. Save this post so you don't forget it!",
         "It took me years of trial and error to finally figure this out. I wish I knew this when I first started! The key is to keep it simple and focus on what actually moves the needle.",
@@ -79,19 +125,70 @@ def generate_captions(category, media, cta):
         "🔗 Click the link in my bio for the full guide!",
         "✅ Follow me for more tips like this every day!"
     ]
-    
+
     cat_hooks = hooks.get(category, default_hooks).copy()
     random.shuffle(cat_hooks)
-    
-    opt1 = f"{cat_hooks[0]}\\n\\n" + ("" if media == "text" else f"Watch the {media} to see exactly how it works. ") + f"Have you ever tried this? Drop a comment below! 👇"
-    
-    b_idx = random.randint(0, len(bodies)-1)
-    c_idx = random.randint(0, len(ctas)-1)
-    opt2 = f"{cat_hooks[1]}\\n\\n{bodies[b_idx]}\\n\\n" + (ctas[c_idx] if cta else "Thanks for watching/reading!")
-    
-    opt3 = f"{cat_hooks[2]} 🔥\\n\\n#trending #{category.lower().replace(' ', '')} #viral"
-    
+
+    media_line = f"Watch the {media} to see exactly how it works. " if media != "text" else ""
+    opt1 = f"{cat_hooks[0]}\n\n{media_line}Have you ever tried this? Drop a comment below! 👇"
+
+    b_idx = random.randint(0, len(bodies) - 1)
+    c_idx = random.randint(0, len(ctas) - 1)
+    cta_line = ctas[c_idx] if cta else "Thanks for watching/reading!"
+    opt2 = f"{cat_hooks[1]}\n\n{bodies[b_idx]}\n\n{cta_line}"
+
+    opt3 = f"{cat_hooks[2]} 🔥\n\n#trending #{category.lower().replace(' ', '')} #viral"
+
     return opt1, opt2, opt3
+
+
+def clipboard_button(text: str, button_label: str, key: str):
+    """Render a real clipboard copy button using JavaScript."""
+    # Escape single quotes and newlines for safe embedding in JS
+    escaped = text.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+    components.html(
+        f"""
+        <button onclick="copyText()" style="
+            background: linear-gradient(135deg, #0070F3, #00b4d8);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: Inter, sans-serif;
+            width: 100%;
+            transition: opacity 0.2s;
+        " id="btn_{key}" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+            {button_label}
+        </button>
+        <span id="msg_{key}" style="font-size:0.75rem; color:#00e676; display:none; margin-left:8px;">✅ Copied!</span>
+        <script>
+        function copyText() {{
+            const text = `{escaped}`;
+            navigator.clipboard.writeText(text).then(function() {{
+                var msg = document.getElementById('msg_{key}');
+                msg.style.display = 'inline';
+                setTimeout(function() {{ msg.style.display = 'none'; }}, 2000);
+            }}).catch(function() {{
+                // Fallback for older browsers
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                var msg = document.getElementById('msg_{key}');
+                msg.style.display = 'inline';
+                setTimeout(function() {{ msg.style.display = 'none'; }}, 2000);
+            }});
+        }}
+        </script>
+        """,
+        height=50,
+    )
+
 
 # ─── Input Form ──────────────────────────────────────────────────────────────
 with st.form("post_form"):
@@ -129,7 +226,7 @@ if submitted:
 
     with st.spinner("AI is analyzing thousands of past posts to forecast yours…"):
         try:
-            bucket  = classifier.predict(input_df)[0]
+            bucket   = classifier.predict(input_df)[0]
             eng_rate = max(0, float(regressor.predict(input_df)[0]))
         except Exception as e:
             st.error("ML Prediction Failed!")
@@ -216,25 +313,29 @@ if submitted:
     # ─── AI Viral Caption Generator ──────────────────────────────────────────
     st.markdown("---")
     st.markdown("### ✍️ AI Viral Caption & Hook Generator")
-    st.markdown(f"<p>Based on your {content_cat} {media_type}, our AI has crafted 3 ready-to-use captions to maximize your engagement.</p>", unsafe_allow_html=True)
-    
+    st.markdown(f"<p>Based on your <b>{content_cat}</b> <b>{media_type}</b>, our AI has crafted 3 ready-to-use captions. Click <b>Copy</b> to instantly copy any caption to your clipboard!</p>", unsafe_allow_html=True)
+
     with st.spinner("Generating viral hooks and captions..."):
         cap1, cap2, cap3 = generate_captions(content_cat, media_type, has_cta)
-    
-    c_gen1, c_gen2, c_gen3 = st.columns(3)
-    
-    with c_gen1:
-        st.markdown("**Option 1: Engagement Bait**")
-        st.info(cap1)
-        st.button("📋 Copy Option 1", key="copy1", help="Highlight text to copy")
-        
-    with c_gen2:
-        st.markdown("**Option 2: The Storyteller**")
-        st.success(cap2)
-        st.button("📋 Copy Option 2", key="copy2", help="Highlight text to copy")
-        
-    with c_gen3:
-        st.markdown("**Option 3: Short & Punchy**")
-        st.warning(cap3)
-        st.button("📋 Copy Option 3", key="copy3", help="Highlight text to copy")
 
+    c_gen1, c_gen2, c_gen3 = st.columns(3)
+
+    with c_gen1:
+        st.markdown("**Option 1: 🎯 Engagement Bait**")
+        st.text_area("Caption 1", cap1, height=160, key="ta_cap1", label_visibility="collapsed")
+        clipboard_button(cap1, "📋 Copy Option 1", "copy1")
+
+    with c_gen2:
+        st.markdown("**Option 2: 📖 The Storyteller**")
+        st.text_area("Caption 2", cap2, height=160, key="ta_cap2", label_visibility="collapsed")
+        clipboard_button(cap2, "📋 Copy Option 2", "copy2")
+
+    with c_gen3:
+        st.markdown("**Option 3: ⚡ Short & Punchy**")
+        st.text_area("Caption 3", cap3, height=160, key="ta_cap3", label_visibility="collapsed")
+        clipboard_button(cap3, "📋 Copy Option 3", "copy3")
+
+    st.markdown("""
+    <div class='tip-box' style='margin-top:12px;'>
+        💡 <b>Tip:</b> You can also <b>click inside any caption box</b> above, press <b>Ctrl+A</b> then <b>Ctrl+C</b> to select and copy the full text.
+    </div>""", unsafe_allow_html=True)

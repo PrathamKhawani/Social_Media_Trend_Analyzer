@@ -7,8 +7,8 @@ env/
 venv/
 ENV/
 
-# Streamlit
-.streamlit/
+# Streamlit (config.toml is needed for deployment, so do NOT ignore)
+# .streamlit/
 
 # VS Code
 .vscode/
