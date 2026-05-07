@@ -91,25 +91,37 @@ if submitted:
     geo = region_geo.get(region, "")
 
     # ML model base prediction (Platform + Content_Type + Region)
-    input_df = pd.DataFrame({'Platform': [platform], 'Content_Type': [content_type], 'Region': [region]})
-    ml_prediction = model.predict(input_df)[0]
     try:
-        proba  = model.predict_proba(input_df)[0]
-        ml_conf = max(proba) * 100
-        classes = getattr(model, "classes_", model.named_steps["classifier"].classes_)
-    except Exception:
-        ml_conf = 60.0
-        classes = ["High", "Low", "Medium"]
-        proba   = [0.3, 0.1, 0.6]
+        input_df = pd.DataFrame({'Platform': [platform], 'Content_Type': [content_type], 'Region': [region]})
+        ml_prediction = model.predict(input_df)[0]
+        try:
+            proba  = model.predict_proba(input_df)[0]
+            ml_conf = max(proba) * 100
+            classes = getattr(model, "classes_", model.named_steps["classifier"].classes_)
+        except Exception:
+            ml_conf = 60.0
+            classes = ["High", "Low", "Medium"]
+            proba   = [0.3, 0.1, 0.6]
+    except Exception as e:
+        st.warning(f"ML Model prediction skipped: {e}")
+        ml_prediction = "Medium"
+        ml_conf = 50.0
+        classes = ["Low", "Medium", "High", "Viral"]
+        proba = [0.25, 0.25, 0.25, 0.25]
 
     # ── Live Google Trends fetch ──────────────────────────────────────────────
     with st.spinner(f"📡 Fetching live Google Trends data for **{hashtag}**…"):
-        trend_data = get_live_trend_score(hashtag, geo=geo)
+        try:
+            trend_data = get_live_trend_score(hashtag, geo=geo)
+        except Exception as e:
+            st.error(f"Failed to fetch live trends: {e}")
+            from utils.trend_fetcher import _fallback_score
+            trend_data = _fallback_score(hashtag)
 
-    trend_score  = trend_data["score"]
-    trend_level  = trend_data["level"]
-    trend_source = trend_data["source"]
-    trend_reason = trend_data["reason"]
+    trend_score  = trend_data.get("score", 50)
+    trend_level  = trend_data.get("level", "Medium")
+    trend_source = trend_data.get("source", "fallback")
+    trend_reason = trend_data.get("reason", "Live data unavailable.")
     interest_df  = trend_data.get("interest_df")
     related      = trend_data.get("related", [])
 

@@ -52,20 +52,43 @@ st.markdown("---")
 
 @st.cache_data
 def load_all():
+    eng, hsh, ts = None, None, None
+    
+    # Load Engagement Data
     try:
-        eng = pd.read_csv(os.path.join(BASE_DIR, 'engagement.csv'))
-    except Exception:
-        eng = None
+        eng_path = os.path.join(BASE_DIR, 'engagement.csv')
+        if os.path.exists(eng_path):
+            eng = pd.read_csv(eng_path)
+            # Ensure engagement_rate is numeric
+            if 'engagement_rate' in eng.columns:
+                eng['engagement_rate'] = pd.to_numeric(eng['engagement_rate'], errors='coerce')
+        else:
+            st.warning("engagement.csv not found.")
+    except Exception as e:
+        st.error(f"Error loading engagement.csv: {e}")
+
+    # Load Hashtag Data
     try:
-        hsh = pd.read_csv(os.path.join(BASE_DIR, 'hashtags.csv'))
-    except Exception:
-        try: hsh = pd.read_csv(os.path.join(BASE_DIR, 'hashtags.csv'), encoding='latin1')
-        except Exception: hsh = None
+        hsh_path = os.path.join(BASE_DIR, 'hashtags.csv')
+        if os.path.exists(hsh_path):
+            try:
+                hsh = pd.read_csv(hsh_path)
+            except UnicodeDecodeError:
+                hsh = pd.read_csv(hsh_path, encoding='latin1')
+    except Exception as e:
+        st.error(f"Error loading hashtags.csv: {e}")
+
+    # Load YouTube Data
     try:
-        ts = pd.read_csv(os.path.join(BASE_DIR, 'time_series.csv'))
-    except Exception:
-        try: ts = pd.read_csv(os.path.join(BASE_DIR, 'time_series.csv'), encoding='latin1')
-        except Exception: ts = None
+        ts_path = os.path.join(BASE_DIR, 'time_series.csv')
+        if os.path.exists(ts_path):
+            try:
+                ts = pd.read_csv(ts_path)
+            except UnicodeDecodeError:
+                ts = pd.read_csv(ts_path, encoding='latin1')
+    except Exception as e:
+        st.error(f"Error loading time_series.csv: {e}")
+        
     return eng, hsh, ts
 
 eng_df, hsh_df, ts_df = load_all()
@@ -80,16 +103,24 @@ with tab1:
         with fc1:
             mt = st.multiselect("Media Type", eng_df['media_type'].dropna().unique(), default=list(eng_df['media_type'].dropna().unique()))
         with fc2:
-            cat = st.multiselect("Content Category", eng_df['content_category'].dropna().unique(), default=list(eng_df['content_category'].dropna().unique())[:3])
+            all_cats = list(eng_df['content_category'].dropna().unique())
+            cat = st.multiselect("Content Category", all_cats, default=all_cats)
         with fc3:
-            perf = st.multiselect("Performance Bucket", eng_df['performance_bucket_label'].dropna().unique(), default=list(eng_df['performance_bucket_label'].dropna().unique()))
+            all_perf = list(eng_df['performance_bucket_label'].dropna().unique())
+            perf = st.multiselect("Performance Bucket", all_perf, default=all_perf)
 
         filtered = eng_df[eng_df['media_type'].isin(mt) & eng_df['content_category'].isin(cat) & eng_df['performance_bucket_label'].isin(perf)]
         
         st.markdown(f"**Showing {len(filtered):,} of {len(eng_df):,} records**")
-        st.dataframe(filtered[['post_id','media_type','content_category','post_hour','likes','comments','engagement_rate','performance_bucket_label']].head(500), use_container_width=True)
         
-        st.download_button("⬇️ Download Filtered CSV", filtered.to_csv(index=False), "engagement_filtered.csv", "text/csv")
+        if not filtered.empty:
+            # Ensure engagement_rate is visible even if small
+            display_cols = ['post_id','media_type','content_category','post_hour','likes','comments','engagement_rate','performance_bucket_label']
+            st.dataframe(filtered[display_cols].head(500), use_container_width=True)
+            
+            st.download_button("⬇️ Download Filtered CSV", filtered.to_csv(index=False), "engagement_filtered.csv", "text/csv")
+        else:
+            st.info("No records match the selected filters.")
 
         st.markdown('<p class="section-header">Summary Statistics</p>', unsafe_allow_html=True)
         sc1, sc2 = st.columns(2)

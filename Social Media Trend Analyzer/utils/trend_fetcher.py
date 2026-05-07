@@ -102,12 +102,18 @@ def get_live_trend_score(keyword: str, timeframe: str = "today 1-m", geo: str = 
 
     try:
         from pytrends.request import TrendReq
-        pytrends = TrendReq(hl='en-US', tz=330, timeout=(10, 25), retries=2, backoff_factor=0.5)
-        pytrends.build_payload([clean_kw], cat=0, timeframe=timeframe, geo=geo, gprop='')
+        # Initialize with a longer timeout and more retries
+        pytrends = TrendReq(hl='en-US', tz=330, timeout=(15, 60), retries=3, backoff_factor=1)
+        
+        # Build payload with error check
+        try:
+            pytrends.build_payload([clean_kw], cat=0, timeframe=timeframe, geo=geo, gprop='')
+        except Exception as e:
+            return _fallback_score(keyword)
 
         interest_df = pytrends.interest_over_time()
 
-        if interest_df.empty or clean_kw not in interest_df.columns:
+        if interest_df is None or interest_df.empty or clean_kw not in interest_df.columns:
             return _fallback_score(keyword)
 
         series = interest_df[clean_kw]
@@ -115,15 +121,15 @@ def get_live_trend_score(keyword: str, timeframe: str = "today 1-m", geo: str = 
         peak_score = int(series.max())
 
         # Fetch related queries for "rising" keywords
+        related_list = []
         try:
             related_data = pytrends.related_queries()
-            rising = related_data.get(clean_kw, {}).get('rising')
-            if rising is not None and not rising.empty and 'query' in rising.columns:
-                related_list = rising['query'].head(5).tolist()
-            else:
-                related_list = []
+            if related_data and clean_kw in related_data:
+                rising = related_data[clean_kw].get('rising')
+                if rising is not None and not rising.empty and 'query' in rising.columns:
+                    related_list = rising['query'].head(5).tolist()
         except Exception:
-            related_list = []
+            pass # Fallback to empty list
 
         level = _score_to_level(avg_score)
 
@@ -144,11 +150,8 @@ def get_live_trend_score(keyword: str, timeframe: str = "today 1-m", geo: str = 
             )
         }
 
-    except ImportError:
-        # pytrends not installed
-        return _fallback_score(keyword)
-    except Exception:
-        # Rate limit or network error → graceful fallback
+    except (ImportError, Exception) as e:
+        # pytrends not installed, rate limit, or network error → graceful fallback
         return _fallback_score(keyword)
 
 
