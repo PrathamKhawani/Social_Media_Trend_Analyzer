@@ -2,12 +2,15 @@
 
 > **AI-powered social media intelligence platform** that combines Machine Learning with **live Google Trends data** to give brands, influencers, and marketers the most accurate, real-time predictions — across every module, for every topic.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://socialmediatrendanalyzer1.streamlit.app/)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3+-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)
 ![Google Trends](https://img.shields.io/badge/Google%20Trends-Live%20Data-4285F4?style=flat-square&logo=google&logoColor=white)
-![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+
+---
+
+### 🌐 [Click here for Live Demo](https://socialmediatrendanalyzer1.streamlit.app/)
 
 ---
 
@@ -101,37 +104,17 @@ Results are **cached for 1 hour** for speed, then auto-refreshed — so the app 
 
 ## 📦 Installation & Setup
 
-### Option 1: Run Locally
-
 ```bash
 # 1. Clone the repository
 git clone https://github.com/PrathamKhawani/Social_Media_Trend_Analyzer.git
 cd Social_Media_Trend_Analyzer
 
-# 2. Create a virtual environment
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Mac/Linux
-
-# 3. Install all dependencies
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 4. Train the ML models (first time only)
-python "Social Media Trend Analyzer/utils/model_trainer.py"
-
-# 5. Launch the app
+# 3. Launch the app
 streamlit run "Social Media Trend Analyzer/Dashboard.py"
 ```
-
-### Option 2: Deploy on Streamlit Cloud (Free)
-
-1. Fork this repository
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Click **New app** → select your fork
-4. Set **Main file path** to: `Social Media Trend Analyzer/Dashboard.py`
-5. Click **Deploy** — done! ✅
-
-> Streamlit Cloud **auto-redeploys** every time you push to `main`. No manual steps needed.
 
 ---
 
